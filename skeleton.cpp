@@ -27,7 +27,19 @@ struct Pixel
 	int x;
 	int y;
 	float zinv;
+	vec3 illumination;
 };
+struct Vertex
+{
+	vec3 position;
+	vec3 normal;
+	vec3 reflectance;
+};
+vec3 lightPos(0, -0.5, -0.7);
+vec3 lightPower = 1.1f*vec3(1, 1, 1);
+vec3 indirectLightPowerPerArea = 0.5f*vec3(1, 1, 1);
+//vec3 currentNormal;
+//vec3 currentReflectance;
 // ----------------------------------------------------------------------------
 // FUNCTIONS
 
@@ -39,7 +51,7 @@ void DrawPolygonEdges(const vector<vec3>& vertices);
 void ComputePolygonRows(const vector<ivec2>& vertexPixels, vector<ivec2>& leftPixels,
 	vector<ivec2>& rightPixels);
 void DrawRows(const vector<ivec2>& leftPixels, const vector<ivec2>& rightPixels);
-void DrawPolygon(const vector<vec3>& vertices);
+void DrawPolygon(const vector<Vertex>& vertices);
 
 void Interpolate(Pixel a, Pixel b, vector<Pixel>& result);
 void ComputePolygonRows(
@@ -52,7 +64,8 @@ void DrawPolygonRows(
 	const vector<Pixel>& leftPixels,
 	const vector<Pixel>& rightPixels
 	);
-void VertexShader(const vec3& v, Pixel& p);
+void VertexShader(const Vertex& v, Pixel& p);
+void PixelShader(const Pixel& p);
 
 int main(int argc, char* argv[])
 {
@@ -133,11 +146,18 @@ void Draw()
 	}
 	for (int i = 0; i<triangles.size(); ++i)
 	{
-		vector<vec3> vertices(3);
+		vector<Vertex> vertices(3);
 
-		vertices[0] = triangles[i].v0;
-		vertices[1] = triangles[i].v1;
-		vertices[2] = triangles[i].v2;
+		vertices[0].position = triangles[i].v0;
+		vertices[1].position = triangles[i].v1;
+		vertices[2].position = triangles[i].v2;
+		//currentNormal = triangles[i].normal;
+		//currentReflectance = triangles[i].color;
+		for (int j = 0; j < 3; j++)
+		{
+			vertices[j].normal = triangles[i].normal;
+			vertices[j].reflectance = triangles[i].color;
+		}
 		//part 4
 		
 		//part 3
@@ -306,7 +326,7 @@ void DrawRows(const vector<ivec2>& leftPixels,
 	}
 }
 
-void DrawPolygon(const vector<vec3>& vertices)
+void DrawPolygon(const vector<Vertex>& vertices)
 {
 	int V = vertices.size();
 	vector<Pixel> vertexPixels(V);//vector<ivec2> vertexPixels(V);
@@ -332,23 +352,24 @@ void Interpolate(Pixel a, Pixel b, vector<Pixel>& result)
 {
 	int N = result.size();
 	float step_x,step_y,step_zinv;
+	vec3 step_ilu, ilu;
+	step_ilu = (b.illumination - a.illumination) / float(fmax(N - 1, 1));
 	step_x= (b.x - a.x) / float(fmax(N - 1, 1));
 	step_y = (b.y - a.y) / float(fmax(N - 1, 1));
 	step_zinv = (b.zinv - a.zinv) / float(fmax(N - 1, 1));
-	vec3 current;
+	vec2 current;
 	current.x = a.x;
 	current.y = a.y;
-	current.z = a.zinv;
 	Pixel current_round=a;
 	for (int i = 0; i<N; ++i)
 	{
 		result[i] = current_round;
 		current.x += step_x;
 		current.y += step_y;
-		current.z += step_zinv;
+		current_round.zinv += step_zinv;
+		current_round.illumination += step_ilu;
 		current_round.x = round(current.x);
 		current_round.y = round(current.y);
-		current_round.zinv = current.z;
 	}
 }
 
@@ -434,20 +455,30 @@ void DrawPolygonRows(const vector<Pixel>& leftPixels, const vector<Pixel>& right
 
 		for (int i = 0; i <S; i++)
 		{				
-			if (depthBuffer[result[i].y][result[i].x] < result[i].zinv)
-			{
-				//if (result[i].x == 240 && result[i].y == 334) cout << "Here,here"<<result[i].zinv<<endl;
-				PutPixelSDL(screen, result[i].x, result[i].y, currentColor);
-				depthBuffer[result[i].y][result[i].x] = result[i].zinv;
-			}
+			PixelShader(result[i]);
 		}
 	}
 }
-void VertexShader(const vec3& v, Pixel& p)
+void VertexShader(const Vertex& v, Pixel& p)
 {
-	vec3 v_trans = v - cameraPos;
+	vec3 v_trans = v.position - cameraPos;
 	float f = SCREEN_WIDTH / 1;
 	p.x = f*v_trans.x / v_trans.z + SCREEN_WIDTH / 2;
 	p.y = f*v_trans.y / v_trans.z + SCREEN_HEIGHT / 2;
 	p.zinv = 1.0 / v_trans.z;
+	vec3 r = lightPos - v.position;
+	vec3 D = lightPower*float(fmax(glm::dot(glm::normalize(r), v.normal), 0) / 4 * glm::dot(r, r)*3.1415926f);
+	p.illumination = v.reflectance*(indirectLightPowerPerArea+D);
+}
+
+
+void PixelShader(const Pixel& p)
+{
+	int x = p.x;
+	int y = p.y;
+	if (p.zinv > depthBuffer[y][x])
+	{
+		depthBuffer[y][x] = p.zinv;
+		PutPixelSDL(screen, x, y, p.illumination);
+	}
 }
