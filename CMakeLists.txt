@@ -3,9 +3,15 @@
 cmake_minimum_required (VERSION 2.6)
 project ( Rasterization )
 
+set(EXECUTABLE_NAME "Rasterization")
 add_executable( Rasterization skeleton.cpp)
 
-find_package (SDL)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules" ${CMAKE_MODULE_PATH})
+
+set(SDL_LIBRARY_TEMP "C:/Coding/SDL/SDL-1.2.15/lib/x86/SDL.lib;C:/Coding/SDL/SDL-1.2.15/lib/x86/SDLmain.lib")
+set(SDL_INCLUDE_DIR "C:/Coding/SDL/SDL-1.2.15/include")
+
+find_package (SDL REQUIRED)
 
 if ( NOT SDL_FOUND )
    message ( FATAL_ERROR "SDL not found!" )

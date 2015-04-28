@@ -1,9 +1,9 @@
 # CMake generation dependency list for this directory.
-C:/Users/HAO/Desktop/rasterization/CMakeLists.txt
-C:/Users/HAO/Desktop/rasterization/_build/CMakeFiles/3.2.2/CMakeSystem.cmake
+C:/Users/HAO/Desktop/lab3/CMakeLists.txt
+C:/Users/HAO/Desktop/lab3/_build/CMakeFiles/3.2.2/CMakeSystem.cmake
 C:/Coding/CMake/share/cmake-3.2/Modules/CMakeSystemSpecificInitialize.cmake
-C:/Users/HAO/Desktop/rasterization/_build/CMakeFiles/3.2.2/CMakeCCompiler.cmake
-C:/Users/HAO/Desktop/rasterization/_build/CMakeFiles/3.2.2/CMakeCXXCompiler.cmake
+C:/Users/HAO/Desktop/lab3/_build/CMakeFiles/3.2.2/CMakeCCompiler.cmake
+C:/Users/HAO/Desktop/lab3/_build/CMakeFiles/3.2.2/CMakeCXXCompiler.cmake
 C:/Coding/CMake/share/cmake-3.2/Modules/CMakeSystemSpecificInformation.cmake
 C:/Coding/CMake/share/cmake-3.2/Modules/CMakeGenericSystem.cmake
 C:/Coding/CMake/share/cmake-3.2/Modules/Platform/Windows.cmake
@@ -11,7 +11,7 @@ C:/Coding/CMake/share/cmake-3.2/Modules/Platform/WindowsPaths.cmake
 C:/Coding/CMake/share/cmake-3.2/Modules/CMakeCInformation.cmake
 C:/Coding/CMake/share/cmake-3.2/Modules/Platform/Windows-MSVC-C.cmake
 C:/Coding/CMake/share/cmake-3.2/Modules/Platform/Windows-MSVC.cmake
-C:/Users/HAO/Desktop/rasterization/_build/CMakeFiles/3.2.2/CMakeRCCompiler.cmake
+C:/Users/HAO/Desktop/lab3/_build/CMakeFiles/3.2.2/CMakeRCCompiler.cmake
 C:/Coding/CMake/share/cmake-3.2/Modules/CMakeRCInformation.cmake
 C:/Coding/CMake/share/cmake-3.2/Modules/CMakeCommonLanguageInclude.cmake
 C:/Coding/CMake/share/cmake-3.2/Modules/CMakeCXXInformation.cmake
