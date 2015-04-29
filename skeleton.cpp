@@ -27,19 +27,20 @@ struct Pixel
 	int x;
 	int y;
 	float zinv;
-	vec3 illumination;
+	vec3 pos3d;
+	//vec3 illumination;
 };
 struct Vertex
 {
 	vec3 position;
-	vec3 normal;
-	vec3 reflectance;
+	//vec3 normal;
+	//vec3 reflectance;
 };
 vec3 lightPos(0, -0.5, -0.7);
 vec3 lightPower = 1.1f*vec3(1, 1, 1);
 vec3 indirectLightPowerPerArea = 0.5f*vec3(1, 1, 1);
-//vec3 currentNormal;
-//vec3 currentReflectance;
+vec3 currentNormal;
+vec3 currentReflectance;
 // ----------------------------------------------------------------------------
 // FUNCTIONS
 
@@ -91,7 +92,7 @@ void Update()
 	t = t2;
 	cout << "Render time: " << dt << " ms." << endl;
 
-	/*Uint8* keystate = SDL_GetKeyState(0);
+	Uint8* keystate = SDL_GetKeyState(0);
 
 	if (keystate[SDLK_UP])
 	;
@@ -112,22 +113,22 @@ void Update()
 	;
 
 	if( keystate[SDLK_w] )
-	;
+	lightPos.z-=0.01;
 
 	if( keystate[SDLK_s] )
-	;
+	lightPos.z+=0.01;
 
 	if( keystate[SDLK_d] )
-	;
+	lightPos.x+=0.01;
 
 	if( keystate[SDLK_a] )
-	;
+	lightPos.x-=0.01;
 
 	if( keystate[SDLK_e] )
-	;
+	lightPos.y+=0.01;
 
 	if( keystate[SDLK_q] )
-	;*/
+		lightPos.y -= 0.01;
 }
 
 void Draw()
@@ -151,13 +152,13 @@ void Draw()
 		vertices[0].position = triangles[i].v0;
 		vertices[1].position = triangles[i].v1;
 		vertices[2].position = triangles[i].v2;
-		//currentNormal = triangles[i].normal;
-		//currentReflectance = triangles[i].color;
-		for (int j = 0; j < 3; j++)
+		currentNormal = triangles[i].normal;
+		currentReflectance = triangles[i].color;
+		/*for (int j = 0; j < 3; j++)
 		{
 			vertices[j].normal = triangles[i].normal;
 			vertices[j].reflectance = triangles[i].color;
-		}
+		}*/
 		//part 4
 		
 		//part 3
@@ -352,12 +353,15 @@ void Interpolate(Pixel a, Pixel b, vector<Pixel>& result)
 {
 	int N = result.size();
 	float step_x,step_y,step_zinv;
-	vec3 step_ilu, ilu;
-	step_ilu = (b.illumination - a.illumination) / float(fmax(N - 1, 1));
+	vec3 step_pos;
+	//vec3 step_ilu, ilu;
+	//step_ilu = (b.illumination - a.illumination) / float(fmax(N - 1, 1));
 	step_x= (b.x - a.x) / float(fmax(N - 1, 1));
 	step_y = (b.y - a.y) / float(fmax(N - 1, 1));
 	step_zinv = (b.zinv - a.zinv) / float(fmax(N - 1, 1));
+	step_pos = (b.pos3d*b.zinv - a.pos3d*a.zinv) / float(fmax(N - 1, 1));
 	vec2 current;
+	vec3 pos_temp=a.pos3d*a.zinv;
 	current.x = a.x;
 	current.y = a.y;
 	Pixel current_round=a;
@@ -367,9 +371,11 @@ void Interpolate(Pixel a, Pixel b, vector<Pixel>& result)
 		current.x += step_x;
 		current.y += step_y;
 		current_round.zinv += step_zinv;
-		current_round.illumination += step_ilu;
+		//current_round.illumination += step_ilu;
+		pos_temp += step_pos;
 		current_round.x = round(current.x);
 		current_round.y = round(current.y);
+		current_round.pos3d = pos_temp / current_round.zinv;
 	}
 }
 
@@ -466,9 +472,11 @@ void VertexShader(const Vertex& v, Pixel& p)
 	p.x = f*v_trans.x / v_trans.z + SCREEN_WIDTH / 2;
 	p.y = f*v_trans.y / v_trans.z + SCREEN_HEIGHT / 2;
 	p.zinv = 1.0 / v_trans.z;
-	vec3 r = lightPos - v.position;
-	vec3 D = lightPower*float(fmax(glm::dot(glm::normalize(r), v.normal), 0) / 4 * glm::dot(r, r)*3.1415926f);
-	p.illumination = v.reflectance*(indirectLightPowerPerArea+D);
+	p.pos3d = v.position;
+	//section 6.1
+	//vec3 r = lightPos - v.position;
+	//vec3 D = lightPower*float(fmax(glm::dot(glm::normalize(r), v.normal), 0) / 4 * glm::dot(r, r)*3.1415926f);
+	//p.illumination = v.reflectance*(indirectLightPowerPerArea+D);
 }
 
 
@@ -478,7 +486,10 @@ void PixelShader(const Pixel& p)
 	int y = p.y;
 	if (p.zinv > depthBuffer[y][x])
 	{
+		vec3 r = lightPos - p.pos3d;
+		vec3 D = lightPower*float(fmax(glm::dot(glm::normalize(r), currentNormal), 0) / 4 * glm::dot(r, r)*3.1415926f);
+		vec3 illumination = currentColor*(indirectLightPowerPerArea + D);
 		depthBuffer[y][x] = p.zinv;
-		PutPixelSDL(screen, x, y, p.illumination);
+		PutPixelSDL(screen, x, y, illumination);
 	}
 }
