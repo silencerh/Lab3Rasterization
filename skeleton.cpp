@@ -152,8 +152,8 @@ void Draw()
 		vertices[0].position = triangles[i].v0;
 		vertices[1].position = triangles[i].v1;
 		vertices[2].position = triangles[i].v2;
-		currentNormal = triangles[i].normal;
-		currentReflectance = triangles[i].color;
+		//currentNormal = triangles[i].normal;
+		//currentReflectance = triangles[i].color;
 		/*for (int j = 0; j < 3; j++)
 		{
 			vertices[j].normal = triangles[i].normal;
